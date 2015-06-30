@@ -1,7 +1,8 @@
 /* Import node's http module: */
 var http = require("http");
-var handlers = require("./request-handler.js");
+var requestHandler = require("./request-handler.js").requestHandler;
 var fs = require("fs");
+var url = require('url');
 
 
 
@@ -29,13 +30,28 @@ fs.readFile('./messages.json', function(error, data){
   global.messages = JSON.parse(data);
 });
 
+var routes = {
+  '/1/classes/chatterbox': requestHandler,
+  '/classes/room': requestHandler,
+  '/classes/room1': requestHandler,
+  '/classes/messages': requestHandler
+}
+
 // We use node's http module to create a server.
 //
 // The function we pass to http.createServer will be used to handle all
 // incoming requests.
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(handlers.requestHandler);
+var server = http.createServer(function (request, response){
+  var route = routes[url.parse(request.url).pathname];
+  if (route) {
+    route(request, response);
+  } else {
+    response.writeHead(404, "Don't know what you're talking about, chump.");
+    response.end();
+  }
+});
 console.log("Listening on http://" + ip + ":" + port);
 server.listen(port, ip);
 
