@@ -1,3 +1,4 @@
+var url = require('url');
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -12,7 +13,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
-var requestHandler = function(request, response) {
+exports.requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,22 +29,60 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
-
-  // The outgoing status.
+  var parsedUrl = url.parse(request.url);
   var statusCode = 200;
+  var statusMsg = 'Kill all Humans.';
+  var responseBody = '';
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  var handleGET = function () {
+
+    // The outgoing status.
+    if (parsedUrl.pathname === '/1/classes/chatterbox' || '/') {
+      statusCode = 200;
+    } else {
+      statusCode = 401;
+      statusMsg = 'Request DENIED, Meatbag.'
+    }
+
+    // Tell the client we are sending them plain text.
+    //
+    // You will need to change this if you are sending something
+    // other than plain text, like JSON or HTML.
+    headers['Content-Type'] = "application/json";
+    responseBody = JSON.stringify({results: global.messages});
+  };
+
+  var handlePOST = function () {
+    // The outgoing status.
+    if (parsedUrl.pathname === '/1/classes/chatterbox' || '/classes/messages') {
+      statusCode = 201;
+      statusMsg = 'Oh God, the noise...';
+    } else {
+      statusCode = 401;
+      statusMsg = 'Request DENIED, Meatbag.';
+    }
+
+    var jsonString = '';
+    var msgObj = {};
+
+    request.on('data', function(data){
+      jsonString += data;
+      msgObj = JSON.parse(jsonString);
+      global.messages.unshift(msgObj);
+    });
+
+    responseBody = JSON.stringify({results: global.messages});
+  };
+
+  if (request.method === 'GET') {handleGET();}
+  if (request.method === 'POST') {handlePOST();}
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  response.writeHead(statusCode, statusMsg, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -52,7 +91,10 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+  console.log('Resonded: ' + statusCode);
+  console.log('Body: ' + responseBody)
+  response.end(responseBody);
+
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
