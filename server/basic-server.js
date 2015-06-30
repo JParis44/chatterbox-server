@@ -1,6 +1,7 @@
 /* Import node's http module: */
 var http = require("http");
 var handlers = require("./request-handler.js");
+var fs = require("fs");
 
 
 
@@ -16,11 +17,17 @@ var port = 3000;
 // special address that always refers to localhost.
 var ip = "127.0.0.1";
 
-global.messages = [{
-  username: '[ADMIN]Bender',
-  text: 'Bite my shiny metal ass, meatbags.',
-  roomname: 'Kill all humans!'
-}];
+// global.messages = [{
+//   username: '[ADMIN]Bender',
+//   text: 'Bite my shiny metal ass, meatbags.',
+//   roomname: 'Kill all humans!'
+// }];
+
+global.messages = [];
+
+fs.readFile('./messages.json', function(error, data){
+  global.messages = JSON.parse(data);
+});
 
 // We use node's http module to create a server.
 //

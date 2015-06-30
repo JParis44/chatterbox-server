@@ -1,4 +1,5 @@
 var url = require('url');
+var fs = require('fs');
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -40,10 +41,10 @@ exports.requestHandler = function(request, response) {
   var handleGET = function () {
 
     // The outgoing status.
-    if (parsedUrl.pathname === '/1/classes/chatterbox' || '/') {
+    if (parsedUrl.pathname === '/1/classes/chatterbox' || parsedUrl.pathname === '/classes/room1' || parsedUrl.pathname === '/classes/messages') {
       statusCode = 200;
     } else {
-      statusCode = 401;
+      statusCode = 404;
       statusMsg = 'Request DENIED, Meatbag.'
     }
 
@@ -57,11 +58,11 @@ exports.requestHandler = function(request, response) {
 
   var handlePOST = function () {
     // The outgoing status.
-    if (parsedUrl.pathname === '/1/classes/chatterbox' || '/classes/messages') {
+    if (parsedUrl.pathname === '/1/classes/chatterbox' || parsedUrl.pathname === '/classes/room1' || parsedUrl.pathname === '/classes/messages') {
       statusCode = 201;
       statusMsg = 'Oh God, the noise...';
     } else {
-      statusCode = 401;
+      statusCode = 404;
       statusMsg = 'Request DENIED, Meatbag.';
     }
 
@@ -71,7 +72,13 @@ exports.requestHandler = function(request, response) {
     request.on('data', function(data){
       jsonString += data;
       msgObj = JSON.parse(jsonString);
+    });
+
+    request.on('end', function(){
       global.messages.unshift(msgObj);
+      fs.writeFile('./messages.json', JSON.stringify(global.messages), function(error){
+        if (error) {console.log(error);}
+      });
     });
 
     responseBody = JSON.stringify({results: global.messages});
@@ -92,7 +99,7 @@ exports.requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   console.log('Resonded: ' + statusCode);
-  console.log('Body: ' + responseBody)
+  // console.log('Body: ' + responseBody)
   response.end(responseBody);
 
 };
