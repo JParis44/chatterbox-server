@@ -1,8 +1,10 @@
 /* Import node's http module: */
 var http = require("http");
 var requestHandler = require("./request-handler.js").requestHandler;
+var servePage = require('./serve-page.js')
 var fs = require("fs");
 var url = require('url');
+var path = require('path');
 
 
 
@@ -31,10 +33,11 @@ fs.readFile('./messages.json', function(error, data){
 });
 
 var routes = {
-  '/1/classes/chatterbox': requestHandler,
-  '/classes/room': requestHandler,
-  '/classes/room1': requestHandler,
-  '/classes/messages': requestHandler
+  '/': servePage,
+  '/1/classes': requestHandler,
+  '/classes': requestHandler
+  // '/classes/room1': requestHandler,
+  // '/classes/messages': requestHandler
 }
 
 // We use node's http module to create a server.
@@ -44,7 +47,8 @@ var routes = {
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
 var server = http.createServer(function (request, response){
-  var route = routes[url.parse(request.url).pathname];
+  var route = url.parse(request.url).pathname;
+  route = routes[path.dirname(route)];
   if (route) {
     route(request, response);
   } else {
